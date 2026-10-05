@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Classement pilotes MotoGP 2026</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f5f5f7;--card:#fff;--tx:#15151e;--mut:#6b6b78;--line:#e4e4ea;--acc:#e10600}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111116;--card:#1b1b23;--tx:#f2f2f5;--mut:#9a9aa8;--line:#2a2a35}}
+:root[data-theme="dark"]{--bg:#111116;--card:#1b1b23;--tx:#f2f2f5;--mut:#9a9aa8;--line:#2a2a35}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;max-width:640px;margin-inline:auto;padding:16px}
+h1{font-size:22px;margin:4px 0 2px}
+h1 span{color:var(--acc)}
+.sub{color:var(--mut);font-size:13px;margin:0 0 14px}
+.next{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:flex;justify-content:space-between;gap:8px}
+.next b{color:var(--acc)}
+input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--tx);font-size:15px;margin-bottom:12px}
+.row{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.pos{font-weight:700;font-size:16px;text-align:center}
+.name{font-weight:600;font-size:15px;display:flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.team{color:var(--mut);font-size:12px}
+.bar{height:4px;border-radius:2px;background:var(--line);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%}
+.pts{text-align:right;font-weight:700;font-size:18px}
+.gap{color:var(--mut);font-size:11px;font-weight:400;display:block}
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.tabs button{flex:1;border:0;background:none;color:var(--mut);font:600 14px system-ui,sans-serif;padding:9px;border-radius:9px;cursor:pointer}
+.tabs button.on{background:var(--acc);color:#fff}
+.race{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.rd{color:var(--mut);font-weight:700;font-size:13px;text-align:center}
+.gp{font-weight:600;font-size:15px}
+.dt{color:var(--mut);font-size:12px}
+.win{text-align:right;font-size:14px;font-weight:600}
+.win small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.foot{color:var(--mut);font-size:12px;margin:14px 0 6px;text-align:center}
+</style>
+</head>
+<body>
+<h1>🏍️ Classement pilotes <span>MotoGP 2026</span></h1>
+<p class="sub" id="sub"></p>
+<div class="next"><span>Prochain GP : <b id="nx"></b></span><span id="nd"></span></div>
+<div class="tabs"><button id="t1" class="on">Classement</button><button id="t2">Courses</button></div>
+<div id="v1"><input id="q" type="search" placeholder="Rechercher un pilote ou une écurie…">
+<div id="list"></div></div>
+<div id="v2" hidden><div id="races"></div></div>
+<p class="foot">Mis à jour après chaque Grand Prix.</p>
+<script>
+const DATA={
+  round:16, total:22, after:"Grand Prix du Japon (Motegi)", date:"4 octobre 2026",
+  next:"Indonésie (Mandalika)", nextDate:"11 octobre 2026",
+  drivers:[
+    ["Jorge Martín","Aprilia Racing",333],["Marc Márquez","Ducati Lenovo Team",331],
+    ["Marco Bezzecchi","Aprilia Racing",284],["Pedro Acosta","Red Bull KTM Factory",243],
+    ["Ai Ogura","Trackhouse",237],["Fabio Di Giannantonio","VR46",230],
+    ["Raúl Fernández","Trackhouse",216],["Francesco Bagnaia","Ducati Lenovo Team",164],
+    ["Álex Márquez","Gresini",158],["Fermín Aldeguer","Gresini",122],
+    ["Enea Bastianini","KTM Tech3",116],["Luca Marini","Honda HRC",104],
+    ["Brad Binder","Red Bull KTM Factory",99],["Diogo Moreira","LCR Honda",74],
+    ["Fabio Quartararo","Yamaha",66],["Franco Morbidelli","VR46",57],
+    ["Johann Zarco","LCR Honda",48],["Joan Mir","Honda HRC",33],
+    ["Jack Miller","Pramac Yamaha",28],["Álex Rins","Yamaha",24],
+    ["Toprak Razgatlıoğlu","Pramac Yamaha",18],["Maverick Viñales","KTM Tech3",12],
+    ["Iker Lecuona","Gresini",9],["Augusto Fernández","Yamaha",6],
+    ["Pol Espargaró","KTM Tech3",5],["Takaaki Nakagami","Honda HRC",3]
+  ]
+};
+const C={A:"#a43fd4",D:"#d11a2a",K:"#ff6a13",H:"#f2c200",Y:"#1e5cff"};
+const COL={"Aprilia Racing":C.A,"Trackhouse":C.A,"Ducati Lenovo Team":C.D,"VR46":C.D,"Gresini":C.D,"Red Bull KTM Factory":C.K,"KTM Tech3":C.K,"Honda HRC":C.H,"LCR Honda":C.H,"Yamaha":C.Y,"Pramac Yamaha":C.Y};
+document.getElementById("sub").textContent="Après la manche "+DATA.round+"/"+DATA.total+" · "+DATA.after+" · "+DATA.date;
+document.getElementById("nx").textContent=DATA.next;
+document.getElementById("nd").textContent=DATA.nextDate;
+const max=DATA.drivers[0][2];
+function render(f){
+  const t=(f||"").toLowerCase();
+  document.getElementById("list").innerHTML=DATA.drivers.map((d,i)=>{
+    if(t&&!(d[0]+" "+d[1]).toLowerCase().includes(t))return"";
+    const c=COL[d[1]]||"#888",gap=i?"−"+(max-d[2])+" pts":"Leader";
+    return `<div class="row"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${d[0]}</div><div class="team">${d[1]}</div><div class="bar"><i style="width:${d[2]/max*100}%;background:${c}"></i></div></div><div class="pts">${d[2]}<span class="gap">${gap}</span></div></div>`;
+  }).join("");
+}
+document.getElementById("q").addEventListener("input",e=>render(e.target.value));
+render();
+const RACES=[
+["Thaïlande","1 mars","Marco Bezzecchi","Aprilia Racing"],["Brésil","22 mars","Marco Bezzecchi","Aprilia Racing"],
+["États-Unis","29 mars","Marco Bezzecchi","Aprilia Racing"],["Espagne","26 avr.","Álex Márquez","Gresini"],
+["France","10 mai","Jorge Martín","Aprilia Racing"],["Catalogne","17 mai","Fabio Di Giannantonio","VR46"],
+["Italie","31 mai","Marco Bezzecchi","Aprilia Racing"],["Hongrie","7 juin","Marc Márquez","Ducati Lenovo Team"],
+["Tchéquie","21 juin","Marc Márquez","Ducati Lenovo Team"],["Pays-Bas","28 juin","Ai Ogura","Trackhouse"],
+["Allemagne","12 juil.","Marc Márquez","Ducati Lenovo Team"],["Grande-Bretagne","9 août","Raúl Fernández","Trackhouse"],
+["Aragon","30 août","Marc Márquez","Ducati Lenovo Team"],["Saint-Marin","13 sept.","Marc Márquez","Ducati Lenovo Team"],
+["Autriche","20 sept.","Pedro Acosta","Red Bull KTM Factory"],["Japon","4 oct.","Marc Márquez","Ducati Lenovo Team"]
+];
+document.getElementById("races").innerHTML=RACES.map((r,i)=>{const c=COL[r[3]]||"#888";
+return `<div class="race"><div class="rd">${i+1}</div><div><div class="gp">GP ${r[0]}</div><div class="dt">${r[1]} 2026</div></div><div class="win"><span class="dot" style="background:${c};display:inline-block;margin-right:5px"></span>${r[2]}<small>${r[3]}</small></div></div>`}).join("");
+function tab(n){["1","2"].forEach(k=>{document.getElementById("v"+k).hidden=k!=n;document.getElementById("t"+k).classList.toggle("on",k==n)})}
+document.getElementById("t1").onclick=()=>tab("1");
+document.getElementById("t2").onclick=()=>tab("2");
+</script>
+</body>
+</html>
