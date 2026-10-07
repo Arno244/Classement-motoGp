@@ -27,7 +27,7 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .pts{text-align:right;font-weight:700;font-size:18px}
 .gap{color:var(--mut);font-size:11px;font-weight:400;display:block}
 .tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
-.tabs button{flex:1;border:0;background:none;color:var(--mut);font:600 14px system-ui,sans-serif;padding:9px;border-radius:9px;cursor:pointer}
+.tabs button{flex:1;border:0;background:none;color:var(--mut);font:600 13px/1.2 system-ui,sans-serif;padding:8px 4px;border-radius:9px;cursor:pointer}
 .tabs button.on{background:var(--acc);color:#fff}
 .race{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}
 .rd{color:var(--mut);font-weight:700;font-size:13px;text-align:center}
@@ -35,17 +35,39 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .dt{color:var(--mut);font-size:12px}
 .win{text-align:right;font-size:14px;font-weight:600}
 .win small{display:block;color:var(--mut);font-weight:400;font-size:12px}
+.next{cursor:pointer}
+.next.open .chev{transform:rotate(180deg)}
+#cal{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 12px;margin:-4px 0 12px}
+.crow{display:grid;grid-template-columns:26px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.crow:last-child{border-bottom:0}
+.crow b{font-weight:600}
+.crow small{display:block;color:var(--mut);font-size:11px}
+.crow .d{color:var(--mut);font-size:12px;text-align:right}
+.crow.done .d::after{content:" ✓"}
+.crow.nx{color:var(--acc)}
+.crow.nx .d{color:var(--acc);font-weight:700}
+.race{cursor:pointer}
+.chev{color:var(--mut);font-size:11px;margin-left:4px;display:inline-block;transition:transform .2s}
+.race.open .chev{transform:rotate(180deg)}
+.det{grid-column:1/-1;display:none;border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
+.race.open .det{display:block}
+.rr{display:grid;grid-template-columns:26px 12px 1fr auto;gap:6px;align-items:center;font-size:13px;padding:3px 0}
+.rp{color:var(--mut);font-weight:700;text-align:right}
+.rt{color:var(--mut);font-size:12px}
+.nodet,.note{color:var(--mut);font-size:12px}
 .foot{color:var(--mut);font-size:12px;margin:14px 0 6px;text-align:center}
 </style>
 </head>
 <body>
 <h1>🏍️ Classement pilotes <span>MotoGP 2026</span></h1>
 <p class="sub" id="sub"></p>
-<div class="next"><span>Prochain GP : <b id="nx"></b></span><span id="nd"></span></div>
-<div class="tabs"><button id="t1" class="on">Classement</button><button id="t2">Courses</button></div>
+<div class="next" id="nextbox"><span>Prochain GP : <b id="nx"></b> <span class="chev">▼</span></span><span id="nd"></span></div>
+<div id="cal" hidden></div>
+<div class="tabs"><button id="t1" class="on">Classement pilotes</button><button id="t2">Courses</button><button id="t3">Classement équipes</button></div>
 <div id="v1"><input id="q" type="search" placeholder="Rechercher un pilote ou une écurie…">
 <div id="list"></div></div>
 <div id="v2" hidden><div id="races"></div></div>
+<div id="v3" hidden><div id="cons"></div></div>
 <p class="foot">Mis à jour après chaque Grand Prix.</p>
 <script>
 const DATA={
@@ -93,11 +115,47 @@ const RACES=[
 ["Aragon","30 août","Marc Márquez","Ducati Lenovo Team"],["Saint-Marin","13 sept.","Marc Márquez","Ducati Lenovo Team"],
 ["Autriche","20 sept.","Pedro Acosta","Red Bull KTM Factory"],["Japon","4 oct.","Marc Márquez","Ducati Lenovo Team"]
 ];
+const N={BEZ:"Marco Bezzecchi",ACO:"Pedro Acosta",RFE:"Raúl Fernández",MAR:"Jorge Martín",OGU:"Ai Ogura",DIG:"Fabio Di Giannantonio",BIN:"Brad Binder",MOR:"Franco Morbidelli",BAG:"Francesco Bagnaia",MRN:"Luca Marini",ZAR:"Johann Zarco",BAS:"Enea Bastianini",MRA:"Diogo Moreira",QUA:"Fabio Quartararo",RIN:"Álex Rins",VIN:"Maverick Viñales",RAZ:"Toprak Razgatlıoğlu",MIL:"Jack Miller",PIR:"Michele Pirro",MIR:"Joan Mir",AMQ:"Álex Márquez",MMQ:"Marc Márquez",ALD:"Fermín Aldeguer",ESP:"Pol Espargaró",AFE:"Augusto Fernández",CRU:"Cal Crutchlow",LEC:"Iker Lecuona",SAV:"Lorenzo Savadori",FOL:"Jonas Folger",NAK:"Takaaki Nakagami",CHA:"Somkiat Chantra"};
+const TEAM={"Michele Pirro":"Gresini","Cal Crutchlow":"LCR Honda","Lorenzo Savadori":"Aprilia Racing","Jonas Folger":"KTM Tech3","Somkiat Chantra":"Honda HRC"};DATA.drivers.forEach(d=>TEAM[d[0]]=d[1]);
+/* Ordre d'arrivée : classés | abandons. null = pas encore renseigné (une entrée par Grand Prix, dans l'ordre) */
+const RES=[
+"BEZ ACO RFE MAR OGU DIG BIN MOR BAG MRN ZAR BAS MRA QUA RIN VIN RAZ MIL PIR | MIR AMQ MMQ",
+"BEZ MAR DIG MMQ OGU AMQ ACO ALD ZAR RFE MRN MOR MRA RIN BAS QUA RAZ VIN | MIR BAG BIN MIL",
+"BEZ MAR ACO DIG MMQ BAS AMQ RFE MRN BAG ALD BIN MRA MOR RAZ MIL QUA RIN | ZAR OGU MIR VIN",
+"AMQ BEZ DIG MAR OGU RFE ZAR BAS ALD ACO BIN MOR MRN QUA MIR RIN MRA MIL RAZ AFE | BAG SAV MMQ",
+"MAR BEZ OGU DIG ACO QUA BAS RFE ALD MRN ZAR RIN RAZ MOR MIL FOL | BIN MIR BAG MRA AMQ MMQ",
+"DIG ALD BAG BEZ QUA MRN BIN OGU MRA MOR VIN AFE MIR RIN MIL RAZ RFE | MAR ACO BAS ZAR AMQ",
+"BEZ MAR BAG OGU DIG ACO MMQ ALD RFE MRA BIN MIR MRN MOR MIL RAZ VIN QUA PIR | BAS RIN CRU",
+"MMQ ACO BAG OGU MRN MRA LEC MIL BAS BIN RAZ DIG RIN MOR VIN | QUA MIR CRU MAR BEZ RFE ALD",
+"MMQ OGU BAG DIG MIR ALD RFE MRN MAR BAS MRA BIN MOR RAZ VIN MIL CRU | ACO RIN QUA",
+"OGU RFE MAR DIG AMQ BAS MMQ QUA RIN MRN BIN MIL VIN MRA AFE CRU | BAG RAZ ACO MOR BEZ MIR",
+"MMQ OGU RFE ACO MAR BAG QUA MRN BAS BIN MRA MIL MOR RIN RAZ | VIN CRU AMQ MIR DIG",
+"RFE MAR BEZ AMQ ACO DIG MMQ BIN MRN MRA MOR MIL ESP RAZ AFE QUA | OGU BAG CRU LEC BAS RIN MIR",
+"MMQ ACO BEZ AMQ MAR ALD DIG BAS MRA BIN MIL MIR RIN MRN ZAR ESP SAV QUA | RAZ RFE BAG MOR",
+"MMQ AMQ ACO ALD MAR RFE DIG BAS MRN QUA BIN RAZ MOR ESP | ZAR RIN BAG MIR MRA MIL BEZ",
+"ACO MAR BEZ OGU MMQ BIN BAG ALD DIG ZAR BAS RFE NAK MRN MRA ESP QUA MOR RIN RAZ MIL | AMQ",
+"MMQ MAR BEZ BAS RFE OGU ACO BAG ALD MRN BIN QUA CHA VIN MOR RIN RAZ DIG MIL ZAR | AMQ MRA"
+];
+const NOTE={7:"Seuls les 15 premiers sont confirmés ; l'ordre de Quartararo, Mir et Crutchlow (après la 15e place) n'a pas pu être vérifié. Martín, Bezzecchi, R. Fernández et Aldeguer ont chuté au premier virage.",8:"Bezzecchi était suspendu pour cette course ; Á. Márquez a déclaré forfait et Zarco était absent (blessés).",9:"Classement après pénalités (limites de piste, pression des pneus). Aldeguer et Zarco absents (blessés).",10:"Bezzecchi, Aldeguer et Zarco absents (blessés).",12:"Ogura (blessé) remplacé par Savadori ; Viñales (blessé) remplacé par Espargaró ; retour de Zarco et Aldeguer.",13:"Ogura toujours absent (blessé, sans remplaçant indiqué) ; Espargaró remplace Viñales.",14:"Mir absent, remplacé par Nakagami ; Espargaró remplace Viñales. Aldeguer rétrogradé en 8e position après pénalité.",15:"Mir absent ; Chantra remplace Nakagami (blessé) chez Honda. Á. Márquez et Zarco ont chuté après leur double long lap."};
+function detail(i){
+  const s=RES[i];
+  if(!s)return '<div class="nodet">Classement complet bientôt disponible.</div>';
+  const p=s.split("|").map(x=>x.trim().split(" ").filter(Boolean));
+  const row=(c,k)=>{const n=N[c],t=TEAM[n]||"",col=COL[t]||"#888";return `<div class="rr"><span class="rp">${k}</span><span class="dot" style="background:${col}"></span><span>${n}</span><span class="rt">${t}</span></div>`};
+  return p[0].map((c,k)=>row(c,k+1)).join("")+(p[1]||[]).map(c=>row(c,"—")).join("")+'<div class="note">— : abandon ou non classé</div>'+(NOTE[i]?'<div class="note">'+NOTE[i]+'</div>':"");
+}
 document.getElementById("races").innerHTML=RACES.map((r,i)=>{const c=COL[r[3]]||"#888";
-return `<div class="race"><div class="rd">${i+1}</div><div><div class="gp">GP ${r[0]}</div><div class="dt">${r[1]} 2026</div></div><div class="win"><span class="dot" style="background:${c};display:inline-block;margin-right:5px"></span>${r[2]}<small>${r[3]}</small></div></div>`}).join("");
-function tab(n){["1","2"].forEach(k=>{document.getElementById("v"+k).hidden=k!=n;document.getElementById("t"+k).classList.toggle("on",k==n)})}
-document.getElementById("t1").onclick=()=>tab("1");
-document.getElementById("t2").onclick=()=>tab("2");
+return `<div class="race" data-i="${i}"><div class="rd">${i+1}</div><div><div class="gp">GP ${r[0]}<span class="chev">▼</span></div><div class="dt">${r[1]} 2026</div></div><div class="win"><span class="dot" style="background:${c};display:inline-block;margin-right:5px"></span>${r[2]}<small>${r[3]}</small></div><div class="det">${detail(i)}</div></div>`}).join("");
+document.getElementById("races").addEventListener("click",e=>{const r=e.target.closest(".race");if(r)r.classList.toggle("open")});
+const T={};DATA.drivers.forEach(d=>T[d[1]]=(T[d[1]]||0)+d[2]);
+const TL=Object.entries(T).sort((a,b)=>b[1]-a[1]);
+document.getElementById("cons").innerHTML=TL.map((t,i)=>{const c=COL[t[0]]||"#888",gap=i?"−"+(TL[0][1]-t[1])+" pts":"Leader";
+return `<div class="row"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${t[0]}</div><div class="bar"><i style="width:${t[1]/TL[0][1]*100}%;background:${c}"></i></div></div><div class="pts">${t[1]}<span class="gap">${gap}</span></div></div>`}).join("");
+const UP=[["Indonésie (Mandalika)","11 oct."],["Australie (Phillip Island)","25 oct."],["Malaisie (Sepang)","1 nov."],["Qatar","8 nov."],["Portugal","22 nov."],["Valence","29 nov."]];
+document.getElementById("cal").innerHTML=RACES.map((r,i)=>`<div class="crow done"><span class="rp">${i+1}</span><div><b>GP ${r[0]}</b><small>Vainqueur : ${r[2]}</small></div><span class="d">${r[1]}</span></div>`).join("")+UP.map((u,i)=>`<div class="crow${i?"":" nx"}"><span class="rp">${RACES.length+i+1}</span><div><b>GP ${u[0]}</b><small>${i?"À venir":"Prochain Grand Prix"}</small></div><span class="d">${u[1]}</span></div>`).join("");
+document.getElementById("nextbox").onclick=function(){const c=document.getElementById("cal");c.hidden=!c.hidden;this.classList.toggle("open",!c.hidden)};
+function tab(n){["1","2","3"].forEach(k=>{document.getElementById("v"+k).hidden=k!=n;document.getElementById("t"+k).classList.toggle("on",k==n)})}
+["1","2","3"].forEach(k=>document.getElementById("t"+k).onclick=()=>tab(k));
 </script>
 </body>
 </html>
