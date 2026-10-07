@@ -56,6 +56,26 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .rt{color:var(--mut);font-size:12px}
 .nodet,.note{color:var(--mut);font-size:12px}
 .foot{color:var(--mut);font-size:12px;margin:14px 0 6px;text-align:center}
+.drv{cursor:pointer}
+.dh{grid-column:1/-1;display:none;border-top:1px solid var(--line);padding-top:10px;margin-top:2px;cursor:default}
+.drv.open .dh{display:block}
+.drv.open .chev{transform:rotate(180deg)}
+.dhead{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.av{width:64px;height:64px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;flex:none}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.dn{font-weight:700;font-size:16px}
+.ds{color:var(--mut);font-size:12px}
+.st{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.st div{background:var(--bg);border-radius:10px;padding:8px 4px;text-align:center;font-size:11px;color:var(--mut)}
+.st b{display:block;font-size:18px;color:var(--tx)}
+.chs{display:flex;flex-wrap:wrap;gap:5px}
+.ch{min-width:44px;text-align:center;background:var(--bg);border-radius:8px;padding:4px 5px;font-size:13px;font-weight:700}
+.ch i{display:block;font-style:normal;font-size:9px;color:var(--mut);font-weight:600}
+.ch.w{background:#f2c200;color:#15151e}.ch.w i{color:#15151e}
+.ch.p{background:#aeb4c0;color:#15151e}.ch.p i{color:#15151e}
+.ch.x{background:#c0261b;color:#fff}.ch.x i{color:#fff}
+.ch.n{opacity:.4}
+.lg{color:var(--mut);font-size:11px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -70,6 +90,7 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 <div id="v3" hidden><div id="cons"></div></div>
 <p class="foot">Mis à jour après chaque Grand Prix.</p>
 <script>
+const OPEN=new Set();
 const DATA={
   round:16, total:22, after:"Grand Prix du Japon (Motegi)", date:"4 octobre 2026",
   next:"Indonésie (Mandalika)", nextDate:"11 octobre 2026",
@@ -100,7 +121,7 @@ function render(f){
   document.getElementById("list").innerHTML=DATA.drivers.map((d,i)=>{
     if(t&&!(d[0]+" "+d[1]).toLowerCase().includes(t))return"";
     const c=COL[d[1]]||"#888",gap=i?"−"+(max-d[2])+" pts":"Leader";
-    return `<div class="row"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${d[0]}</div><div class="team">${d[1]}</div><div class="bar"><i style="width:${d[2]/max*100}%;background:${c}"></i></div></div><div class="pts">${d[2]}<span class="gap">${gap}</span></div></div>`;
+    return `<div class="row drv${OPEN.has(d[0])?" open":""}" data-n="${d[0]}"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${d[0]}<span class="chev">▼</span></div><div class="team">${d[1]}</div><div class="bar"><i style="width:${d[2]/max*100}%;background:${c}"></i></div></div><div class="pts">${d[2]}<span class="gap">${gap}</span></div><div class="dh">${OPEN.has(d[0])?hist(d[0]):""}</div></div>`;
   }).join("");
 }
 document.getElementById("q").addEventListener("input",e=>render(e.target.value));
@@ -156,6 +177,43 @@ document.getElementById("cal").innerHTML=RACES.map((r,i)=>`<div class="crow done
 document.getElementById("nextbox").onclick=function(){const c=document.getElementById("cal");c.hidden=!c.hidden;this.classList.toggle("open",!c.hidden)};
 function tab(n){["1","2","3"].forEach(k=>{document.getElementById("v"+k).hidden=k!=n;document.getElementById("t"+k).classList.toggle("on",k==n)})}
 ["1","2","3"].forEach(k=>document.getElementById("t"+k).onclick=()=>tab(k));
+
+/* ===== Fiche pilote : historique + photo ===== */
+const PH={};
+const WT={"Kimi Antonelli":"Andrea Kimi Antonelli","George Russell":"George Russell (racing driver)","Carlos Sainz":"Carlos Sainz Jr.","Alex Albon":"Alexander Albon","Raúl Fernández":"Raúl Fernández (motorcyclist)","Jack Miller":"Jack Miller (motorcyclist)"};
+const ini=n=>n.split(" ").filter(Boolean).map(w=>w[0]).slice(0,2).join("").toUpperCase();
+function avHTML(n,col){return PH[n]?`<img alt="" referrerpolicy="no-referrer" src="${PH[n]}">`:ini(n)}
+function hist(name){
+  const code=Object.keys(N).find(k=>N[k]===name),team=TEAM[name]||"",col=COL[team]||"#888";
+  const di=DATA.drivers.findIndex(d=>d[0]===name),pts=di>=0?DATA.drivers[di][2]:0;
+  let w=0,pod=0,t5=0,fin=0,dnf=0,ent=0,sum=0,best=0;const chips=[];
+  RES.forEach((s,i)=>{
+    const g=(RACES[i]&&RACES[i][0])||"";let k=-1,x=false;
+    if(s){const p=s.split("|").map(z=>z.trim().split(" ").filter(Boolean));k=p[0].indexOf(code);x=(p[1]||[]).includes(code)}
+    let cls="",v="–";
+    if(k>=0){const r=k+1;ent++;fin++;sum+=r;if(!best||r<best)best=r;if(r===1)w++;if(r<=3)pod++;if(r<=5)t5++;v=r;cls=r===1?"w":r<=3?"p":""}
+    else if(x){ent++;dnf++;v="✕";cls="x"}
+    else cls="n";
+    chips.push(`<span class="ch ${cls}" title="GP ${g}"><i>${g.slice(0,3).toUpperCase()}</i>${v}</span>`)});
+  const st=[[di+1+"e","Classement"],[pts,"Points"],[w,"Victoires"],[pod,"Podiums"],[t5,"Top 5"],[dnf,"Abandons / NC"],[ent,"Courses"],[best?best+"e":"–","Meilleur résultat"],[fin?(sum/fin).toFixed(1):"–","Position moy."]];
+  return `<div class="dhead"><div class="av" data-n="${name}" style="background:${col}">${avHTML(name)}</div><div><div class="dn">${name}</div><div class="ds">${team} · Saison 2026</div></div></div><div class="st">${st.map(a=>`<div><b>${a[0]}</b>${a[1]}</div>`).join("")}</div><div class="chs">${chips.join("")}</div><div class="lg">Résultat de chaque Grand Prix (ordre de la saison). Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent.</div><div class="lg">Photo : Wikipédia (si disponible).</div>`;
+}
+async function photo(name){
+  if(name in PH)return;PH[name]=null;
+  try{
+    const r=await fetch("https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent((WT[name]||name).replace(/ /g,"_")));
+    if(!r.ok)return;const j=await r.json();
+    if(j.type!=="standard"||!j.thumbnail||!/racing|driver|rider|motorcycl|motorsport|formula/i.test((j.description||"")+" "+(j.extract||"").slice(0,250)))return;
+    PH[name]=j.thumbnail.source;
+    document.querySelectorAll(".av").forEach(a=>{if(a.dataset.n===name)a.innerHTML=avHTML(name)});
+  }catch(e){}
+}
+document.getElementById("list").addEventListener("click",e=>{
+  const r=e.target.closest(".drv");if(!r||e.target.closest(".dh"))return;
+  const n=r.dataset.n;
+  if(OPEN.has(n)){OPEN.delete(n);r.classList.remove("open");return}
+  OPEN.add(n);r.querySelector(".dh").innerHTML=hist(n);r.classList.add("open");photo(n);
+});
 </script>
 </body>
 </html>
