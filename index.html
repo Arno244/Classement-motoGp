@@ -78,6 +78,24 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .lg{color:var(--mut);font-size:11px;margin-top:8px}
 .tg{font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;letter-spacing:.4px;line-height:1.5;flex:none;display:inline-block}
 .dn .tg,.rr .tg{margin-left:6px}
+.pn{--tc:#888}
+.dhead{background:linear-gradient(135deg,color-mix(in srgb,var(--tc) 30%,transparent),transparent 80%);border-radius:16px;padding:12px}
+.av{box-shadow:0 0 0 3px var(--tc)}
+.hero{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+.hero div{background:var(--bg);border-radius:14px;padding:10px 4px 9px;text-align:center;font-size:11px;color:var(--mut);border-top:3px solid var(--tc)}
+.hero b{display:block;font-size:30px;line-height:1.1;color:var(--tx);font-weight:800;letter-spacing:-.5px}
+.hero em{font-style:normal;display:block;font-size:15px;margin-bottom:1px}
+.st div{border-radius:12px}
+.st b{font-size:17px}
+.ch{border-radius:10px}
+.ch.w{background:linear-gradient(135deg,#ffd84d,#f2a900)}
+.ch.p{background:linear-gradient(135deg,#dde1e8,#9ca3b2)}
+.bars{display:flex;align-items:flex-end;gap:3px;overflow-x:auto;padding:2px 0 4px}
+.bc{display:flex;flex-direction:column;align-items:center;min-width:18px}
+.bb{width:100%;border-radius:5px 5px 0 0;background:var(--tc);opacity:.85}
+.bb.tt{background:linear-gradient(180deg,#ffd84d,#f2a900);opacity:1}
+.bv{font-size:9px;color:var(--mut);height:12px;line-height:12px;font-weight:700}
+.by{font-size:9px;color:var(--mut);margin-top:2px}
 </style>
 </head>
 <body>
@@ -93,6 +111,8 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 <p class="foot">Mis à jour après chaque Grand Prix.</p>
 <script>
 const OPEN=new Set();
+function ico(l){return l.startsWith("Victoires")?"🏆":l.startsWith("Podiums")?"🏅":l.startsWith("Points")?"⚡":l.startsWith("Titres")?"👑":l.startsWith("Pole")?"⏱️":""}
+function stHTML(st,h){return `<div class="hero">${h.map(i=>`<div>${ico(st[i][1])?`<em>${ico(st[i][1])}</em>`:""}<b>${st[i][0]}</b>${st[i][1]}</div>`).join("")}</div><div class="st">${st.filter((_,i)=>!h.includes(i)).map(a=>`<div><b>${a[0]}</b>${a[1]}</div>`).join("")}</div>`}
 const ABBR={"Mercedes":"MER","Ferrari":"FER","McLaren":"MCL","Red Bull":"RBR","Racing Bulls":"RB","Alpine":"ALP","Haas":"HAA","Audi":"AUD","Aston Martin":"AMR","Williams":"WIL","Cadillac":"CAD","Aprilia Racing":"APR","Trackhouse":"TRK","Ducati Lenovo Team":"DUC","VR46":"VR4","Gresini":"GRE","Red Bull KTM Factory":"KTM","KTM Tech3":"TE3","Honda HRC":"HRC","LCR Honda":"LCR","Yamaha":"YAM","Pramac Yamaha":"PRA"};
 function tg(t){if(!t)return"";const c=COL[t]||"#888",m=/^#/.test(c)?c.match(/\w\w/g).map(h=>parseInt(h,16)):[136,136,136],l=.299*m[0]+.587*m[1]+.114*m[2];return `<span class="tg" style="background:${c};color:${l>150?"#15151e":"#fff"}">${ABBR[t]||t.slice(0,3).toUpperCase()}</span>`}
 const DATA={
@@ -200,7 +220,7 @@ function hist(name){
     else cls="n";
     chips.push(`<span class="ch ${cls}" title="GP ${g}"><i>${g.slice(0,3).toUpperCase()}</i>${v}</span>`)});
   const st=[[di+1+"e","Classement"],[pts,"Points"],[w,"Victoires"],[pod,"Podiums"],[t5,"Top 5"],[dnf,"Abandons / NC"],[ent,"Courses"],[best?best+"e":"–","Meilleur résultat"],[fin?(sum/fin).toFixed(1):"–","Position moy."]];
-  return `<div class="dhead"><div class="av" data-n="${name}" style="background:${col}">${avHTML(name)}</div><div><div class="dn">${name}${tg(team)}</div><div class="ds">${team} · Saison 2026</div></div></div><div class="st">${st.map(a=>`<div><b>${a[0]}</b>${a[1]}</div>`).join("")}</div><div class="chs">${chips.join("")}</div><div class="lg">Résultat de chaque Grand Prix (ordre de la saison). Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent.</div><div class="lg">Photo : Wikipédia (si disponible).</div>`;
+  return `<div class="pn" style="--tc:${col}"><div class="dhead"><div class="av" data-n="${name}" style="background:${col}">${avHTML(name)}</div><div><div class="dn">${name}${tg(team)}</div><div class="ds">${team} · Saison 2026</div></div></div>${stHTML(st,[2,3,1])}<div class="chs">${chips.join("")}</div><div class="lg">Résultat de chaque Grand Prix (ordre de la saison). Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent.</div><div class="lg">Photo : Wikipédia (si disponible).</div></div>`;
 }
 async function photo(name){
   if(name in PH)return;PH[name]=null;
@@ -239,7 +259,7 @@ function thist(team){
   const st=[[rk+"e","Classement"],[pts,"Points"],[w,"Victoires"],[pod,"Podiums (pilotes)"],[t5,"Top 5 (pilotes)"],[dnf,"Abandons / NC"],[ent,"Départs (pilotes)"],[best?best+"e":"–","Meilleur résultat"],[DATA.drivers.filter(d=>d[1]===team).length,"Pilotes"]];
   const dr=DATA.drivers.filter(d=>d[1]===team).map(d=>{const c=Object.keys(N).find(k=>N[k]===d[0]),q=per[c]||{w:0,pod:0,dnf:0,ent:0};
     return `<div class="rr" style="grid-template-columns:1fr auto"><span>${d[0]}</span><span class="rt">${d[2]} pts · ${q.w} vict. · ${q.pod} pod. · ${q.dnf} aband./NC</span></div>`}).join("");
-  return `<div class="dhead"><div class="av" style="background:${col}">${ini(team)}</div><div><div class="dn">${team}</div><div class="ds">Saison 2026</div></div></div><div class="st">${st.map(a=>`<div><b>${a[0]}</b>${a[1]}</div>`).join("")}</div><div class="ds" style="margin-bottom:6px">Détail par pilote</div>${dr}<div class="ds" style="margin:10px 0 6px">Meilleur résultat de l'équipe à chaque Grand Prix</div><div class="chs">${chips.join("")}</div><div class="lg">Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent. Les pilotes sont rattachés à leur équipe actuelle ; « Victoires » compte les courses gagnées par l'équipe.</div>`;
+  return `<div class="pn" style="--tc:${col}"><div class="dhead"><div class="av" style="background:${col}">${ini(team)}</div><div><div class="dn">${team}</div><div class="ds">Saison 2026</div></div></div>${stHTML(st,[2,3,1])}<div class="ds" style="margin-bottom:6px">Détail par pilote</div>${dr}<div class="ds" style="margin:10px 0 6px">Meilleur résultat de l'équipe à chaque Grand Prix</div><div class="chs">${chips.join("")}</div><div class="lg">Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent. Les pilotes sont rattachés à leur équipe actuelle ; « Victoires » compte les courses gagnées par l'équipe.</div></div>`;
 }
 document.getElementById("cons").addEventListener("click",e=>{
   const r=e.target.closest(".tm");if(!r||e.target.closest(".dh"))return;
