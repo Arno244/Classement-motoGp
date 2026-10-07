@@ -3,6 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#15151e">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MotoGP 2026">
 <title>Classement pilotes MotoGP 2026</title>
 <style>
 :root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f5f5f7;--card:#fff;--tx:#15151e;--mut:#6b6b78;--line:#e4e4ea;--acc:#e10600}
@@ -325,5 +332,6 @@ document.getElementById("cal").addEventListener("click",e=>{
   if(r.classList.contains("open")){r.querySelector(".cc").innerHTML=ccHTML(r.dataset.g);circ(r.dataset.g)}
 });
 </script>
+<script>if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{})</script>
 </body>
 </html>
