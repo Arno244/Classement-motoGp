@@ -101,6 +101,11 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .wm{position:absolute;right:8px;top:18px;font-weight:900;font-style:italic;letter-spacing:-2px;color:var(--tc);opacity:.17;pointer-events:none;white-space:nowrap;z-index:0}
 .pn>.wi{position:absolute;z-index:0;left:0;right:0;top:0;height:210px;background-size:cover;background-position:center;opacity:.28;-webkit-mask-image:linear-gradient(180deg,#000 40%,transparent);mask-image:linear-gradient(180deg,#000 40%,transparent)}
 .cr{font-size:12px;color:var(--mut)}
+.det{position:relative}
+.det>.ci{position:absolute;inset:0;z-index:0;background-size:contain;background-position:center;background-repeat:no-repeat;opacity:.2;pointer-events:none}
+.det>*:not(.ci){position:relative;z-index:1}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .det>.ci{filter:invert(1)}}
+:root[data-theme="dark"] .det>.ci{filter:invert(1)}
 </style>
 </head>
 <body>
@@ -116,6 +121,24 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 <p class="foot">Mis à jour après chaque Grand Prix.</p>
 <script>
 const OPEN=new Set();
+const CIRC={"Thaïlande": ["Chang International Circuit", "chang"], "Brésil": ["Autódromo Internacional Ayrton Senna Goiânia", "goi"], "États-Unis": ["Circuit of the Americas", "americas"], "Espagne": ["Circuito de Jerez", "jerez"], "France": ["Bugatti Circuit", "bugatti"], "Catalogne": ["Circuit de Barcelona-Catalunya", "catalunya"], "Italie": ["Mugello Circuit", "mugello"], "Hongrie": ["Balaton Park Circuit", "balaton"], "Tchéquie": ["Brno Circuit", "brno"], "Pays-Bas": ["TT Circuit Assen", "assen"], "Allemagne": ["Sachsenring", "sachsenring"], "Grande-Bretagne": ["Silverstone Circuit", "silverstone"], "Aragon": ["MotorLand Aragón", "motorland"], "Saint-Marin": ["Misano World Circuit Marco Simoncelli", "misano"], "Autriche": ["Red Bull Ring", "redbullring"], "Japon": ["Mobility Resort Motegi", "motegi"], "Indonésie": ["Mandalika International Street Circuit", "mandalika"], "Australie": ["Phillip Island Grand Prix Circuit", "phillipisland"], "Malaisie": ["Sepang International Circuit", "sepang"], "Qatar": ["Lusail International Circuit", "lusail"], "Portugal": ["Algarve International Circuit", "algarve"], "Valence": ["Circuit Ricardo Tormo", "tormo"]};
+const CIM={};
+function ci(g){return CIRC[g]?`<div class="ci" data-g="${g}"${CIM[g]?` style="background-image:url('${CIM[g]}')"`:""}></div>`:""}
+function ciApply(g){document.querySelectorAll(".ci").forEach(e=>{if(e.dataset.g===g&&CIM[g])e.style.backgroundImage=`url("${CIM[g]}")`})}
+async function circ(g){
+  const q=CIRC[g];if(!q)return;
+  if(g in CIM){ciApply(g);return}
+  CIM[g]=null;
+  try{const o=JSON.parse(localStorage.getItem("circ:"+g)||"null");if(o&&Date.now()-o.t<6048e5){CIM[g]=o.u;ciApply(g);return}}catch(e){}
+  try{
+    const r=await fetch("https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch="+encodeURIComponent(q[0])+"&gsrlimit=4&prop=pageimages&piprop=thumbnail&pithumbsize=800&format=json&origin=*");
+    const j=await r.json(),nz=x=>x.toLowerCase().replace(/[^a-z0-9]/g,"");
+    const pg=Object.values((j.query||{}).pages||{}).sort((a,b)=>a.index-b.index);
+    const hit=pg.find(p=>p.thumbnail&&nz(p.title).includes(q[1]));
+    if(hit){CIM[g]=hit.thumbnail.source;try{localStorage.setItem("circ:"+g,JSON.stringify({t:Date.now(),u:CIM[g]}))}catch(e){}}
+  }catch(e){}
+  ciApply(g);
+}
 const CARS={"Mercedes":"W17","Ferrari":"SF-26","McLaren":"MCL40","Red Bull":"RB22","Racing Bulls":"VCARB 03","Alpine":"A526","Haas":"VF-26","Audi":"R26","Aston Martin":"AMR26","Williams":"FW48","Cadillac":"MAC-26","Aprilia Racing":"RS-GP26","Trackhouse":"RS-GP26","Ducati Lenovo Team":"Desmosedici GP26","Gresini":"Desmosedici GP26","VR46":"Desmosedici GP26","Pramac Yamaha":"YZR-M1","Yamaha":"YZR-M1","Red Bull KTM Factory":"RC16","KTM Tech3":"RC16","Honda HRC":"RC213V","LCR Honda":"RC213V"};
 const CARO={"Fermín Aldeguer":"Desmosedici GP25"};
 function carOf(n,t){return CARO[n]||CARS[t]||""}
@@ -217,8 +240,8 @@ function detail(i){
   return p[0].map((c,k)=>row(c,k+1)).join("")+(p[1]||[]).map(c=>row(c,"—")).join("")+'<div class="note">— : abandon ou non classé</div>'+(NOTE[i]?'<div class="note">'+NOTE[i]+'</div>':"");
 }
 document.getElementById("races").innerHTML=RACES.map((r,i)=>{const c=COL[r[3]]||"#888";
-return `<div class="race" data-i="${i}"><div class="rd">${i+1}</div><div><div class="gp">GP ${r[0]}<span class="chev">▼</span></div><div class="dt">${r[1]} 2026</div></div><div class="win"><span class="dot" style="background:${c};display:inline-block;margin-right:5px"></span>${r[2]}<small>${r[3]}</small></div><div class="det">${detail(i)}</div></div>`}).reverse().join("");
-document.getElementById("races").addEventListener("click",e=>{const r=e.target.closest(".race");if(r)r.classList.toggle("open")});
+return `<div class="race" data-i="${i}"><div class="rd">${i+1}</div><div><div class="gp">GP ${r[0]}<span class="chev">▼</span></div><div class="dt">${r[1]} 2026</div></div><div class="win"><span class="dot" style="background:${c};display:inline-block;margin-right:5px"></span>${r[2]}<small>${r[3]}</small></div><div class="det">${ci(r[0])}${detail(i)}</div></div>`}).reverse().join("");
+document.getElementById("races").addEventListener("click",e=>{const r=e.target.closest(".race");if(r){r.classList.toggle("open");const c=r.querySelector(".ci");if(c&&r.classList.contains("open"))circ(c.dataset.g)}});
 const T={};DATA.drivers.forEach(d=>T[d[1]]=(T[d[1]]||0)+d[2]);
 const TL=Object.entries(T).sort((a,b)=>b[1]-a[1]);
 document.getElementById("cons").innerHTML=TL.map((t,i)=>{const c=COL[t[0]]||"#888",gap=i?"−"+(TL[0][1]-t[1])+" pts":"Leader";
