@@ -96,6 +96,9 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .bb.tt{background:linear-gradient(180deg,#ffd84d,#f2a900);opacity:1}
 .bv{font-size:9px;color:var(--mut);height:12px;line-height:12px;font-weight:700}
 .by{font-size:9px;color:var(--mut);margin-top:2px}
+.pn{position:relative;overflow:hidden;border-radius:16px}
+.pn>*:not(.wm){position:relative;z-index:1}
+.wm{position:absolute;right:8px;top:18px;font-weight:900;font-style:italic;letter-spacing:-2px;color:var(--tc);opacity:.17;pointer-events:none;white-space:nowrap;z-index:0}
 </style>
 </head>
 <body>
@@ -111,6 +114,10 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 <p class="foot">Mis à jour après chaque Grand Prix.</p>
 <script>
 const OPEN=new Set();
+const CARS={"Mercedes":"W17","Ferrari":"SF-26","McLaren":"MCL40","Red Bull":"RB22","Racing Bulls":"VCARB 03","Alpine":"A526","Haas":"VF-26","Audi":"R26","Aston Martin":"AMR26","Williams":"FW48","Cadillac":"MAC-26","Aprilia Racing":"RS-GP26","Trackhouse":"RS-GP26","Ducati Lenovo Team":"Desmosedici GP26","Gresini":"Desmosedici GP26","VR46":"Desmosedici GP26","Pramac Yamaha":"YZR-M1","Yamaha":"YZR-M1","Red Bull KTM Factory":"RC16","KTM Tech3":"RC16","Honda HRC":"RC213V","LCR Honda":"RC213V"};
+const CARO={"Fermín Aldeguer":"Desmosedici GP25"};
+function carOf(n,t){return CARO[n]||CARS[t]||""}
+function wm(n,t){const c=carOf(n,t);return c?`<div class="wm" style="font-size:${c.length>9?34:54}px">${c}</div>`:""}
 function ico(l){return l.startsWith("Victoires")?"🏆":l.startsWith("Podiums")?"🏅":l.startsWith("Points")?"⚡":l.startsWith("Titres")?"👑":l.startsWith("Pole")?"⏱️":""}
 function stHTML(st,h){return `<div class="hero">${h.map(i=>`<div>${ico(st[i][1])?`<em>${ico(st[i][1])}</em>`:""}<b>${st[i][0]}</b>${st[i][1]}</div>`).join("")}</div><div class="st">${st.filter((_,i)=>!h.includes(i)).map(a=>`<div><b>${a[0]}</b>${a[1]}</div>`).join("")}</div>`}
 const ABBR={"Mercedes":"MER","Ferrari":"FER","McLaren":"MCL","Red Bull":"RBR","Racing Bulls":"RB","Alpine":"ALP","Haas":"HAA","Audi":"AUD","Aston Martin":"AMR","Williams":"WIL","Cadillac":"CAD","Aprilia Racing":"APR","Trackhouse":"TRK","Ducati Lenovo Team":"DUC","VR46":"VR4","Gresini":"GRE","Red Bull KTM Factory":"KTM","KTM Tech3":"TE3","Honda HRC":"HRC","LCR Honda":"LCR","Yamaha":"YAM","Pramac Yamaha":"PRA"};
@@ -220,7 +227,7 @@ function hist(name){
     else cls="n";
     chips.push(`<span class="ch ${cls}" title="GP ${g}"><i>${g.slice(0,3).toUpperCase()}</i>${v}</span>`)});
   const st=[[di+1+"e","Classement"],[pts,"Points"],[w,"Victoires"],[pod,"Podiums"],[t5,"Top 5"],[dnf,"Abandons / NC"],[ent,"Courses"],[best?best+"e":"–","Meilleur résultat"],[fin?(sum/fin).toFixed(1):"–","Position moy."]];
-  return `<div class="pn" style="--tc:${col}"><div class="dhead"><div class="av" data-n="${name}" style="background:${col}">${avHTML(name)}</div><div><div class="dn">${name}${tg(team)}</div><div class="ds">${team} · Saison 2026</div></div></div>${stHTML(st,[2,3,1])}<div class="chs">${chips.join("")}</div><div class="lg">Résultat de chaque Grand Prix (ordre de la saison). Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent.</div><div class="lg">Photo : Wikipédia (si disponible).</div></div>`;
+  return `<div class="pn" style="--tc:${col}">${wm(name,team)}<div class="dhead"><div class="av" data-n="${name}" style="background:${col}">${avHTML(name)}</div><div><div class="dn">${name}${tg(team)}</div><div class="ds">${team}${carOf(name,team)?" · "+carOf(name,team):""} · Saison 2026</div></div></div>${stHTML(st,[2,3,1])}<div class="chs">${chips.join("")}</div><div class="lg">Résultat de chaque Grand Prix (ordre de la saison). Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent.</div><div class="lg">Photo : Wikipédia (si disponible).</div></div>`;
 }
 async function photo(name){
   if(name in PH)return;PH[name]=null;
@@ -259,7 +266,7 @@ function thist(team){
   const st=[[rk+"e","Classement"],[pts,"Points"],[w,"Victoires"],[pod,"Podiums (pilotes)"],[t5,"Top 5 (pilotes)"],[dnf,"Abandons / NC"],[ent,"Départs (pilotes)"],[best?best+"e":"–","Meilleur résultat"],[DATA.drivers.filter(d=>d[1]===team).length,"Pilotes"]];
   const dr=DATA.drivers.filter(d=>d[1]===team).map(d=>{const c=Object.keys(N).find(k=>N[k]===d[0]),q=per[c]||{w:0,pod:0,dnf:0,ent:0};
     return `<div class="rr" style="grid-template-columns:1fr auto"><span>${d[0]}</span><span class="rt">${d[2]} pts · ${q.w} vict. · ${q.pod} pod. · ${q.dnf} aband./NC</span></div>`}).join("");
-  return `<div class="pn" style="--tc:${col}"><div class="dhead"><div class="av" style="background:${col}">${ini(team)}</div><div><div class="dn">${team}</div><div class="ds">Saison 2026</div></div></div>${stHTML(st,[2,3,1])}<div class="ds" style="margin-bottom:6px">Détail par pilote</div>${dr}<div class="ds" style="margin:10px 0 6px">Meilleur résultat de l'équipe à chaque Grand Prix</div><div class="chs">${chips.join("")}</div><div class="lg">Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent. Les pilotes sont rattachés à leur équipe actuelle ; « Victoires » compte les courses gagnées par l'équipe.</div></div>`;
+  return `<div class="pn" style="--tc:${col}">${wm("",team)}<div class="dhead"><div class="av" style="background:${col}">${ini(team)}</div><div><div class="dn">${team}</div><div class="ds">${carOf("",team)?carOf("",team)+" · ":""}Saison 2026</div></div></div>${stHTML(st,[2,3,1])}<div class="ds" style="margin-bottom:6px">Détail par pilote</div>${dr}<div class="ds" style="margin:10px 0 6px">Meilleur résultat de l'équipe à chaque Grand Prix</div><div class="chs">${chips.join("")}</div><div class="lg">Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent. Les pilotes sont rattachés à leur équipe actuelle ; « Victoires » compte les courses gagnées par l'équipe.</div></div>`;
 }
 document.getElementById("cons").addEventListener("click",e=>{
   const r=e.target.closest(".tm");if(!r||e.target.closest(".dh"))return;
