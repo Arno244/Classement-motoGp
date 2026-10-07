@@ -101,11 +101,10 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .wm{position:absolute;right:8px;top:18px;font-weight:900;font-style:italic;letter-spacing:-2px;color:var(--tc);opacity:.17;pointer-events:none;white-space:nowrap;z-index:0}
 .pn>.wi{position:absolute;z-index:0;left:0;right:0;top:0;height:210px;background-size:cover;background-position:center;opacity:.28;-webkit-mask-image:linear-gradient(180deg,#000 40%,transparent);mask-image:linear-gradient(180deg,#000 40%,transparent)}
 .cr{font-size:12px;color:var(--mut)}
-.det{position:relative}
-.det>.ci{position:absolute;inset:0;z-index:0;background-size:contain;background-position:center;background-repeat:no-repeat;opacity:.2;pointer-events:none}
-.det>*:not(.ci){position:relative;z-index:1}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .det>.ci{filter:invert(1)}}
-:root[data-theme="dark"] .det>.ci{filter:invert(1)}
+.crow{cursor:pointer}
+.cc{grid-column:1/-1;display:none;text-align:center;padding:4px 0 6px}
+.crow.open .cc{display:block}
+.cc img{max-width:100%;max-height:260px;border-radius:10px;background:#fff;padding:8px}
 </style>
 </head>
 <body>
@@ -123,21 +122,23 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 const OPEN=new Set();
 const CIRC={"Thaïlande": ["Chang International Circuit", "chang"], "Brésil": ["Autódromo Internacional Ayrton Senna Goiânia", "goi"], "États-Unis": ["Circuit of the Americas", "americas"], "Espagne": ["Circuito de Jerez", "jerez"], "France": ["Bugatti Circuit", "bugatti"], "Catalogne": ["Circuit de Barcelona-Catalunya", "catalunya"], "Italie": ["Mugello Circuit", "mugello"], "Hongrie": ["Balaton Park Circuit", "balaton"], "Tchéquie": ["Brno Circuit", "brno"], "Pays-Bas": ["TT Circuit Assen", "assen"], "Allemagne": ["Sachsenring", "sachsenring"], "Grande-Bretagne": ["Silverstone Circuit", "silverstone"], "Aragon": ["MotorLand Aragón", "motorland"], "Saint-Marin": ["Misano World Circuit Marco Simoncelli", "misano"], "Autriche": ["Red Bull Ring", "redbullring"], "Japon": ["Mobility Resort Motegi", "motegi"], "Indonésie": ["Mandalika International Street Circuit", "mandalika"], "Australie": ["Phillip Island Grand Prix Circuit", "phillipisland"], "Malaisie": ["Sepang International Circuit", "sepang"], "Qatar": ["Lusail International Circuit", "lusail"], "Portugal": ["Algarve International Circuit", "algarve"], "Valence": ["Circuit Ricardo Tormo", "tormo"]};
 const CIM={};
-function ci(g){return CIRC[g]?`<div class="ci" data-g="${g}"${CIM[g]?` style="background-image:url('${CIM[g]}')"`:""}></div>`:""}
-function ciApply(g){document.querySelectorAll(".ci").forEach(e=>{if(e.dataset.g===g&&CIM[g])e.style.backgroundImage=`url("${CIM[g]}")`})}
+function ckey(g){return CIRC[g]?g:String(g).replace(/ \(.*\)$/,"")}
+function ccHTML(g){const k=ckey(g);if(!CIRC[k])return '<div class="lg">Tracé indisponible pour ce circuit.</div>';if(CIM[k])return `<img alt="Tracé du circuit" src="${CIM[k]}"><div class="lg">Tracé : Wikipédia</div>`;if(CIM[k]===null&&CDONE[k])return '<div class="lg">Tracé indisponible pour ce circuit.</div>';return '<div class="lg">Chargement du tracé…</div>'}
+const CDONE={};
+function ccApply(g){document.querySelectorAll("#cal .crow").forEach(e=>{if(e.dataset.g===g&&e.classList.contains("open"))e.querySelector(".cc").innerHTML=ccHTML(g)})}
 async function circ(g){
-  const q=CIRC[g];if(!q)return;
-  if(g in CIM){ciApply(g);return}
-  CIM[g]=null;
-  try{const o=JSON.parse(localStorage.getItem("circ:"+g)||"null");if(o&&Date.now()-o.t<6048e5){CIM[g]=o.u;ciApply(g);return}}catch(e){}
+  const k=ckey(g),q=CIRC[k];if(!q)return;
+  if(k in CIM){ccApply(g);return}
+  CIM[k]=null;
+  try{const o=JSON.parse(localStorage.getItem("circ:"+k)||"null");if(o&&Date.now()-o.t<6048e5){CIM[k]=o.u;CDONE[k]=1;ccApply(g);return}}catch(e){}
   try{
     const r=await fetch("https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch="+encodeURIComponent(q[0])+"&gsrlimit=4&prop=pageimages&piprop=thumbnail&pithumbsize=800&format=json&origin=*");
     const j=await r.json(),nz=x=>x.toLowerCase().replace(/[^a-z0-9]/g,"");
     const pg=Object.values((j.query||{}).pages||{}).sort((a,b)=>a.index-b.index);
     const hit=pg.find(p=>p.thumbnail&&nz(p.title).includes(q[1]));
-    if(hit){CIM[g]=hit.thumbnail.source;try{localStorage.setItem("circ:"+g,JSON.stringify({t:Date.now(),u:CIM[g]}))}catch(e){}}
+    if(hit){CIM[k]=hit.thumbnail.source;try{localStorage.setItem("circ:"+k,JSON.stringify({t:Date.now(),u:CIM[k]}))}catch(e){}}
   }catch(e){}
-  ciApply(g);
+  CDONE[k]=1;ccApply(g);
 }
 const CARS={"Mercedes":"W17","Ferrari":"SF-26","McLaren":"MCL40","Red Bull":"RB22","Racing Bulls":"VCARB 03","Alpine":"A526","Haas":"VF-26","Audi":"R26","Aston Martin":"AMR26","Williams":"FW48","Cadillac":"MAC-26","Aprilia Racing":"RS-GP26","Trackhouse":"RS-GP26","Ducati Lenovo Team":"Desmosedici GP26","Gresini":"Desmosedici GP26","VR46":"Desmosedici GP26","Pramac Yamaha":"YZR-M1","Yamaha":"YZR-M1","Red Bull KTM Factory":"RC16","KTM Tech3":"RC16","Honda HRC":"RC213V","LCR Honda":"RC213V"};
 const CARO={"Fermín Aldeguer":"Desmosedici GP25"};
@@ -240,14 +241,14 @@ function detail(i){
   return p[0].map((c,k)=>row(c,k+1)).join("")+(p[1]||[]).map(c=>row(c,"—")).join("")+'<div class="note">— : abandon ou non classé</div>'+(NOTE[i]?'<div class="note">'+NOTE[i]+'</div>':"");
 }
 document.getElementById("races").innerHTML=RACES.map((r,i)=>{const c=COL[r[3]]||"#888";
-return `<div class="race" data-i="${i}"><div class="rd">${i+1}</div><div><div class="gp">GP ${r[0]}<span class="chev">▼</span></div><div class="dt">${r[1]} 2026</div></div><div class="win"><span class="dot" style="background:${c};display:inline-block;margin-right:5px"></span>${r[2]}<small>${r[3]}</small></div><div class="det">${ci(r[0])}${detail(i)}</div></div>`}).reverse().join("");
-document.getElementById("races").addEventListener("click",e=>{const r=e.target.closest(".race");if(r){r.classList.toggle("open");const c=r.querySelector(".ci");if(c&&r.classList.contains("open"))circ(c.dataset.g)}});
+return `<div class="race" data-i="${i}"><div class="rd">${i+1}</div><div><div class="gp">GP ${r[0]}<span class="chev">▼</span></div><div class="dt">${r[1]} 2026</div></div><div class="win"><span class="dot" style="background:${c};display:inline-block;margin-right:5px"></span>${r[2]}<small>${r[3]}</small></div><div class="det">${detail(i)}</div></div>`}).reverse().join("");
+document.getElementById("races").addEventListener("click",e=>{const r=e.target.closest(".race");if(r)r.classList.toggle("open")});
 const T={};DATA.drivers.forEach(d=>T[d[1]]=(T[d[1]]||0)+d[2]);
 const TL=Object.entries(T).sort((a,b)=>b[1]-a[1]);
 document.getElementById("cons").innerHTML=TL.map((t,i)=>{const c=COL[t[0]]||"#888",gap=i?"−"+(TL[0][1]-t[1])+" pts":"Leader";
 return `<div class="row drv tm${OPEN.has("T:"+t[0])?" open":""}" data-t="${t[0]}"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${t[0]}<span class="chev">▼</span></div><div class="bar"><i style="width:${t[1]/TL[0][1]*100}%;background:${c}"></i></div></div><div class="pts">${t[1]}<span class="gap">${gap}</span></div><div class="dh">${OPEN.has("T:"+t[0])?thist(t[0]):""}</div></div>`}).join("");
 const UP=[["Indonésie (Mandalika)","11 oct."],["Australie (Phillip Island)","25 oct."],["Malaisie (Sepang)","1 nov."],["Qatar","8 nov."],["Portugal","22 nov."],["Valence","29 nov."]];
-document.getElementById("cal").innerHTML=RACES.map((r,i)=>`<div class="crow done"><span class="rp">${i+1}</span><div><b>GP ${r[0]}</b><small>Vainqueur : ${r[2]}</small></div><span class="d">${r[1]}</span></div>`).join("")+UP.map((u,i)=>`<div class="crow${i?"":" nx"}"><span class="rp">${RACES.length+i+1}</span><div><b>GP ${u[0]}</b><small>${i?"À venir":"Prochain Grand Prix"}</small></div><span class="d">${u[1]}</span></div>`).join("");
+document.getElementById("cal").innerHTML=RACES.map((r,i)=>`<div class="crow done" data-g="${r[0]}"><span class="rp">${i+1}</span><div><b>GP ${r[0]}</b><small>Vainqueur : ${r[2]}</small></div><span class="d">${r[1]}</span><div class="cc"></div></div>`).join("")+UP.map((u,i)=>`<div class="crow${i?"":" nx"}" data-g="${u[0]}"><span class="rp">${RACES.length+i+1}</span><div><b>GP ${u[0]}</b><small>${i?"À venir":"Prochain Grand Prix"}</small></div><span class="d">${u[1]}</span><div class="cc"></div></div>`).join("");
 document.getElementById("nextbox").onclick=function(){const c=document.getElementById("cal");c.hidden=!c.hidden;this.classList.toggle("open",!c.hidden)};
 function tab(n){["1","2","3"].forEach(k=>{document.getElementById("v"+k).hidden=k!=n;document.getElementById("t"+k).classList.toggle("on",k==n)})}
 ["1","2","3"].forEach(k=>document.getElementById("t"+k).onclick=()=>tab(k));
@@ -316,6 +317,12 @@ document.getElementById("cons").addEventListener("click",e=>{
   const k="T:"+r.dataset.t;
   if(OPEN.has(k)){OPEN.delete(k);r.classList.remove("open");return}
   OPEN.add(k);r.querySelector(".dh").innerHTML=thist(r.dataset.t);r.classList.add("open");carPhoto(r.dataset.t);
+});
+
+document.getElementById("cal").addEventListener("click",e=>{
+  const r=e.target.closest(".crow");if(!r||e.target.closest(".cc"))return;
+  r.classList.toggle("open");
+  if(r.classList.contains("open")){r.querySelector(".cc").innerHTML=ccHTML(r.dataset.g);circ(r.dataset.g)}
 });
 </script>
 </body>
