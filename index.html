@@ -76,6 +76,8 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .ch.x{background:#c0261b;color:#fff}.ch.x i{color:#fff}
 .ch.n{opacity:.4}
 .lg{color:var(--mut);font-size:11px;margin-top:8px}
+.tg{font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;letter-spacing:.4px;line-height:1.5;flex:none;display:inline-block}
+.dn .tg,.rr .tg{margin-left:6px}
 </style>
 </head>
 <body>
@@ -91,6 +93,8 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 <p class="foot">Mis à jour après chaque Grand Prix.</p>
 <script>
 const OPEN=new Set();
+const ABBR={"Mercedes":"MER","Ferrari":"FER","McLaren":"MCL","Red Bull":"RBR","Racing Bulls":"RB","Alpine":"ALP","Haas":"HAA","Audi":"AUD","Aston Martin":"AMR","Williams":"WIL","Cadillac":"CAD","Aprilia Racing":"APR","Trackhouse":"TRK","Ducati Lenovo Team":"DUC","VR46":"VR4","Gresini":"GRE","Red Bull KTM Factory":"KTM","KTM Tech3":"TE3","Honda HRC":"HRC","LCR Honda":"LCR","Yamaha":"YAM","Pramac Yamaha":"PRA"};
+function tg(t){if(!t)return"";const c=COL[t]||"#888",m=/^#/.test(c)?c.match(/\w\w/g).map(h=>parseInt(h,16)):[136,136,136],l=.299*m[0]+.587*m[1]+.114*m[2];return `<span class="tg" style="background:${c};color:${l>150?"#15151e":"#fff"}">${ABBR[t]||t.slice(0,3).toUpperCase()}</span>`}
 const DATA={
   round:16, total:22, after:"Grand Prix du Japon (Motegi)", date:"4 octobre 2026",
   next:"Indonésie (Mandalika)", nextDate:"11 octobre 2026",
@@ -121,7 +125,7 @@ function render(f){
   document.getElementById("list").innerHTML=DATA.drivers.map((d,i)=>{
     if(t&&!(d[0]+" "+d[1]).toLowerCase().includes(t))return"";
     const c=COL[d[1]]||"#888",gap=i?"−"+(max-d[2])+" pts":"Leader";
-    return `<div class="row drv${OPEN.has(d[0])?" open":""}" data-n="${d[0]}"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${d[0]}<span class="chev">▼</span></div><div class="team">${d[1]}</div><div class="bar"><i style="width:${d[2]/max*100}%;background:${c}"></i></div></div><div class="pts">${d[2]}<span class="gap">${gap}</span></div><div class="dh">${OPEN.has(d[0])?hist(d[0]):""}</div></div>`;
+    return `<div class="row drv${OPEN.has(d[0])?" open":""}" data-n="${d[0]}"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${d[0]}${tg(d[1])}<span class="chev">▼</span></div><div class="team">${d[1]}</div><div class="bar"><i style="width:${d[2]/max*100}%;background:${c}"></i></div></div><div class="pts">${d[2]}<span class="gap">${gap}</span></div><div class="dh">${OPEN.has(d[0])?hist(d[0]):""}</div></div>`;
   }).join("");
 }
 document.getElementById("q").addEventListener("input",e=>render(e.target.value));
@@ -162,7 +166,7 @@ function detail(i){
   const s=RES[i];
   if(!s)return '<div class="nodet">Classement complet bientôt disponible.</div>';
   const p=s.split("|").map(x=>x.trim().split(" ").filter(Boolean));
-  const row=(c,k)=>{const n=N[c],t=TEAM[n]||"",col=COL[t]||"#888";return `<div class="rr"><span class="rp">${k}</span><span class="dot" style="background:${col}"></span><span>${n}</span><span class="rt">${t}</span></div>`};
+  const row=(c,k)=>{const n=N[c],t=TEAM[n]||"",col=COL[t]||"#888";return `<div class="rr"><span class="rp">${k}</span><span class="dot" style="background:${col}"></span><span>${n}${tg(t)}</span><span class="rt">${t}</span></div>`};
   return p[0].map((c,k)=>row(c,k+1)).join("")+(p[1]||[]).map(c=>row(c,"—")).join("")+'<div class="note">— : abandon ou non classé</div>'+(NOTE[i]?'<div class="note">'+NOTE[i]+'</div>':"");
 }
 document.getElementById("races").innerHTML=RACES.map((r,i)=>{const c=COL[r[3]]||"#888";
@@ -196,7 +200,7 @@ function hist(name){
     else cls="n";
     chips.push(`<span class="ch ${cls}" title="GP ${g}"><i>${g.slice(0,3).toUpperCase()}</i>${v}</span>`)});
   const st=[[di+1+"e","Classement"],[pts,"Points"],[w,"Victoires"],[pod,"Podiums"],[t5,"Top 5"],[dnf,"Abandons / NC"],[ent,"Courses"],[best?best+"e":"–","Meilleur résultat"],[fin?(sum/fin).toFixed(1):"–","Position moy."]];
-  return `<div class="dhead"><div class="av" data-n="${name}" style="background:${col}">${avHTML(name)}</div><div><div class="dn">${name}</div><div class="ds">${team} · Saison 2026</div></div></div><div class="st">${st.map(a=>`<div><b>${a[0]}</b>${a[1]}</div>`).join("")}</div><div class="chs">${chips.join("")}</div><div class="lg">Résultat de chaque Grand Prix (ordre de la saison). Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent.</div><div class="lg">Photo : Wikipédia (si disponible).</div>`;
+  return `<div class="dhead"><div class="av" data-n="${name}" style="background:${col}">${avHTML(name)}</div><div><div class="dn">${name}${tg(team)}</div><div class="ds">${team} · Saison 2026</div></div></div><div class="st">${st.map(a=>`<div><b>${a[0]}</b>${a[1]}</div>`).join("")}</div><div class="chs">${chips.join("")}</div><div class="lg">Résultat de chaque Grand Prix (ordre de la saison). Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent.</div><div class="lg">Photo : Wikipédia (si disponible).</div>`;
 }
 async function photo(name){
   if(name in PH)return;PH[name]=null;
