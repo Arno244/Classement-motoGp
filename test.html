@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Test MotoGP</title>
+<style>body{font-family:system-ui;max-width:640px;margin:auto;padding:16px;background:#111116;color:#f2f2f5}button{font:600 15px system-ui;padding:12px;border:0;border-radius:10px;background:#e10600;color:#fff;width:100%;margin:10px 0}.r{background:#1b1b23;border:1px solid #2a2a35;border-radius:12px;padding:10px;margin-bottom:8px;font-size:13px}.ok{color:#4ade80}.ko{color:#f87171}pre{white-space:pre-wrap;word-break:break-all;color:#9a9aa8;font-size:11px;margin:6px 0 0}</style></head>
+<body><h1>Test MotoGP</h1><button id="go">Lancer le test</button><div id="out"></div>
+<script>
+const B="https://api.motogp.pulselive.com/motogp/v1/results",S="e88b4e43-2209-47aa-8e83-0e0b1cedde6e",out=document.getElementById("out");
+function line(t,ok,d){const e=document.createElement("div");e.className="r";e.innerHTML='<b class="'+(ok?"ok":"ko")+'">'+(ok?"✓":"✗")+" "+t+"</b><pre></pre>";e.querySelector("pre").textContent=d||"";out.appendChild(e)}
+async function g(t,u){try{const r=await fetch(u);if(!r.ok){line(t,false,"HTTP "+r.status);return null}const j=await r.json();line(t,true,Array.isArray(j)?"liste de "+j.length:"clés : "+Object.keys(j).join(", "));return j}catch(e){line(t,false,"Bloqué : "+e.message);return null}}
+document.getElementById("go").onclick=async()=>{out.innerHTML="";
+const ev=await g("Calendrier",B+"/events?seasonUuid="+S+"&isFinished=true");
+const cats=await g("Catégories",B+"/categories?seasonUuid="+S);let cat=null;
+if(cats){const l=Array.isArray(cats)?cats:(cats.categories||[]);cat=l.find(c=>/^motogp/i.test(c.name||c.legacy_id||""))||l[0];if(cat)line("Catégorie",true,JSON.stringify(cat).slice(0,200))}
+if(cat){const s=await g("Classement pilotes",B+"/standings?seasonUuid="+S+"&categoryUuid="+cat.id);
+if(s)line("Extrait classement",true,JSON.stringify(s.classification||s).slice(0,300));
+if(ev){const gp=ev.filter(e=>!e.test).sort((a,b)=>b.date_start.localeCompare(a.date_start))[0];
+const ss=await g("Séances du dernier GP",B+"/sessions?eventUuid="+gp.id+"&categoryUuid="+cat.id);
+if(ss&&Array.isArray(ss)){const race=ss.find(x=>x.type==="RAC")||ss[ss.length-1];
+if(race){const c=await g("Classement course",B+"/session/"+race.id+"/classification");if(c)line("Extrait course",true,JSON.stringify(c).slice(0,300))}}}}
+line("Terminé",true,"Capture d'écran svp");};
+</script></body></html>
