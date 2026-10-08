@@ -1,10 +1,10 @@
 {
- "id": "./?app=motos-2026-v2",
+ "id": "/Classement-motoGp/",
  "name": "Classement Motos 2026",
  "short_name": "Motos 2026",
  "lang": "fr",
- "start_url": "./",
- "scope": "./",
+ "start_url": "/Classement-motoGp/",
+ "scope": "/Classement-motoGp/",
  "display": "standalone",
  "orientation": "portrait",
  "background_color": "#15151e",
