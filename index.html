@@ -133,6 +133,9 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .ig-rb>div.f{grid-column:1/-1}
 .ig-b{height:22px;margin-top:3px;display:flex}
 .ig-b i{font-style:normal;font-weight:800;font-size:14px;color:#15151e;background:linear-gradient(180deg,#ffd84d,#f2a900);padding:0 8px;display:flex;align-items:center;min-width:30px;border-radius:2px}
+.av.ig-ph.wi{background-size:cover;background-position:center}
+.wi[style*="background-image"] .ig-in{display:none}
+.ig-tm{display:flex;flex-direction:column;gap:3px;margin-bottom:2px}
 </style>
 </head>
 <body>
@@ -342,7 +345,12 @@ function thist(team){
   const st=[[rk+"e","Classement"],[pts,"Points"],[w,"Victoires"],[pod,"Podiums (pilotes)"],[t5,"Top 5 (pilotes)"],[dnf,"Abandons / NC"],[ent,"Départs (pilotes)"],[best?best+"e":"–","Meilleur résultat"],[DATA.drivers.filter(d=>d[1]===team).length,"Pilotes"]];
   const dr=DATA.drivers.filter(d=>d[1]===team).map(d=>{const c=Object.keys(N).find(k=>N[k]===d[0]),q=per[c]||{w:0,pod:0,dnf:0,ent:0};
     return `<div class="rr" style="grid-template-columns:1fr auto"><span>${d[0]}</span><span class="rt">${d[2]} pts · ${q.w} vict. · ${q.pod} pod. · ${q.dnf} aband./NC</span></div>`}).join("");
-  return `<div class="pn" style="--tc:${col}">${wm("",team)}${wi(team)}<div class="dhead"><div class="av" style="background:${col}">${ini(team)}</div><div><div class="dn">${team}</div><div class="ds">${carOf("",team)?carOf("",team)+" · ":""}Saison 2026</div></div></div>${stHTML(st,[2,3,1])}<div class="ds" style="margin-bottom:6px">Détail par pilote</div>${dr}<div class="ds" style="margin:10px 0 6px">Meilleur résultat de l'équipe à chaque Grand Prix</div><div class="chs">${chips.join("")}</div><div class="lg">Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent. Les pilotes sont rattachés à leur équipe actuelle ; « Victoires » compte les courses gagnées par l'équipe. Photo de fond : Wikipédia, si disponible.</div></div>`;
+  const ord=n=>n===1?"1er":n+"e";
+  const sc=v=>Math.max(9,Math.round(v/Math.max(1,ent)*100));
+  const tro=w?"🏆".repeat(Math.min(w,10))+(w>10?` <small>+${w-10}</small>`:""):"";
+  const rb=(l,v)=>`<div>${l}<div class="ig-b"><i style="width:${sc(v)}%">${v}</i></div></div>`;
+  const nd=DATA.drivers.filter(d=>d[1]===team).length;
+  return `<div class="pn" style="--tc:${col}">${wm("",team)}${wi(team)}<div class="ig-title">${team}</div><div class="ig-sub">${carOf("",team)?carOf("",team)+" · ":""}Saison 2026</div><div class="ig-top"><div class="av ig-ph${CQ[team]?" wi":""}" data-t="${team}" style="background-color:${col}${CPH[team]?`;background-image:url('${CPH[team]}')`:""}"><span class="ig-in">${ini(team)}</span></div><div class="ig-li"><div>Classement : <b>${ord(rk)}</b></div><div>Points : <b>${pts}</b></div><div>Pilotes : <b>${nd}</b></div><div>Départs (pilotes) : <b>${ent}</b></div><div>Meilleur résultat : <b>${best?ord(best):"–"}</b></div></div></div><div class="ig-h">Palmarès 2026</div>${tro?`<div class="ig-tr">${tro}</div>`:""}<div class="ig-p"><b>${w}</b> victoire${w>1?"s":""} · <b>${pod}</b> podium${pod>1?"s":""} (pilotes)</div><div class="ig-h">Records de la saison</div><div class="ig-rb">${rb("Victoires",w)}${rb("Podiums",pod)}${rb("Top 5",t5)}${rb("Abandons / NC",dnf)}</div><div class="ig-h">Pilotes</div>${dr}<div class="ig-h">Meilleur résultat par GP</div><div class="chs">${chips.join("")}</div><div class="lg">Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent. Barres : sur ${ent} départ${ent>1?"s":""} de pilotes. Les pilotes sont rattachés à leur équipe actuelle ; « Victoires » compte les courses gagnées par l'équipe. Photo : Wikipédia, si disponible.</div></div>`;
 }
 document.getElementById("cons").addEventListener("click",e=>{
   const r=e.target.closest(".tm");if(!r||e.target.closest(".dh"))return;
