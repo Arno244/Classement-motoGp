@@ -65,6 +65,9 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .dh{grid-column:1/-1;display:none;border-top:1px solid var(--line);padding-top:10px;margin-top:2px;cursor:default}
 .drv.open .dh{display:block}
 .drv.open .chev{transform:rotate(180deg)}
+.drv.open{--mut:#e0e0ea;background:linear-gradient(180deg,#000 0%,#06060a 22%,color-mix(in srgb,var(--tc) 82%,#000) 100%);border-color:color-mix(in srgb,var(--tc) 55%,var(--line))}
+.drv.open .dh,.drv.open .team,.drv.open .dn,.drv.open .ds{text-shadow:0 1px 3px rgba(0,0,0,.55)}
+.drv.open .dh .mut,.drv.open .dh p,.drv.open .dh small{color:#f2f2f5}
 .dhead{display:flex;gap:12px;align-items:center;margin-bottom:10px}
 .av{width:64px;height:64px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;flex:none}
 .av img{width:100%;height:100%;object-fit:cover;display:block}
@@ -201,7 +204,7 @@ function render(f){
   document.getElementById("list").innerHTML=DATA.drivers.map((d,i)=>{
     if(t&&!(d[0]+" "+d[1]).toLowerCase().includes(t))return"";
     const c=COL[d[1]]||"#888",gap=i?"−"+(max-d[2])+" pts":"Leader";
-    return `<div class="row drv${OPEN.has(d[0])?" open":""}" data-n="${d[0]}"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${d[0]}${tg(d[1])}<span class="chev">▼</span></div><div class="team">${d[1]}</div><div class="bar"><i style="width:${d[2]/max*100}%;background:${c}"></i></div></div><div class="pts">${d[2]}<span class="gap">${gap}</span></div><div class="dh">${OPEN.has(d[0])?hist(d[0]):""}</div></div>`;
+    return `<div class="row drv${OPEN.has(d[0])?" open":""}" data-n="${d[0]}" style="--tc:${c}"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${d[0]}${tg(d[1])}<span class="chev">▼</span></div><div class="team">${d[1]}</div><div class="bar"><i style="width:${d[2]/max*100}%;background:${c}"></i></div></div><div class="pts">${d[2]}<span class="gap">${gap}</span></div><div class="dh">${OPEN.has(d[0])?hist(d[0]):""}</div></div>`;
   }).join("");
 }
 document.getElementById("q").addEventListener("input",e=>render(e.target.value));
@@ -251,7 +254,7 @@ document.getElementById("races").addEventListener("click",e=>{const r=e.target.c
 const T={};DATA.drivers.forEach(d=>T[d[1]]=(T[d[1]]||0)+d[2]);
 const TL=Object.entries(T).sort((a,b)=>b[1]-a[1]);
 document.getElementById("cons").innerHTML=TL.map((t,i)=>{const c=COL[t[0]]||"#888",gap=i?"−"+(TL[0][1]-t[1])+" pts":"Leader";
-return `<div class="row drv tm${OPEN.has("T:"+t[0])?" open":""}" data-t="${t[0]}"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${t[0]}<span class="chev">▼</span></div><div class="bar"><i style="width:${t[1]/TL[0][1]*100}%;background:${c}"></i></div></div><div class="pts">${t[1]}<span class="gap">${gap}</span></div><div class="dh">${OPEN.has("T:"+t[0])?thist(t[0]):""}</div></div>`}).join("");
+return `<div class="row drv tm${OPEN.has("T:"+t[0])?" open":""}" data-t="${t[0]}" style="--tc:${c}"><div class="pos">${i+1}</div><div><div class="name"><span class="dot" style="background:${c}"></span>${t[0]}<span class="chev">▼</span></div><div class="bar"><i style="width:${t[1]/TL[0][1]*100}%;background:${c}"></i></div></div><div class="pts">${t[1]}<span class="gap">${gap}</span></div><div class="dh">${OPEN.has("T:"+t[0])?thist(t[0]):""}</div></div>`}).join("");
 const UP=[["Indonésie (Mandalika)","11 oct."],["Australie (Phillip Island)","25 oct."],["Malaisie (Sepang)","1 nov."],["Qatar","8 nov."],["Portugal","22 nov."],["Valence","29 nov."]];
 document.getElementById("cal").innerHTML=RACES.map((r,i)=>`<div class="crow done" data-g="${r[0]}"><span class="rp">${i+1}</span><div><b>GP ${r[0]}</b><small>Vainqueur : ${r[2]}</small></div><span class="d">${r[1]}</span><div class="cc"></div></div>`).join("")+UP.map((u,i)=>`<div class="crow${i?"":" nx"}" data-g="${u[0]}"><span class="rp">${RACES.length+i+1}</span><div><b>GP ${u[0]}</b><small>${i?"À venir":"Prochain Grand Prix"}</small></div><span class="d">${u[1]}</span><div class="cc"></div></div>`).join("");
 document.getElementById("nextbox").onclick=function(){const c=document.getElementById("cal");c.hidden=!c.hidden;this.classList.toggle("open",!c.hidden)};
