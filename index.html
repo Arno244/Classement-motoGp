@@ -113,6 +113,26 @@ input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--lin
 .cc{grid-column:1/-1;display:none;text-align:center;padding:4px 0 6px}
 .crow.open .cc{display:block}
 .cc img{max-width:100%;max-height:260px;border-radius:10px;background:#fff;padding:8px}
+
+.ig-title{font-size:27px;font-weight:900;letter-spacing:-.5px;line-height:1.08}
+.ig-title .tg{margin-left:9px;vertical-align:middle;font-size:11px}
+.ig-sub{font-size:12.5px;color:var(--mut);margin:5px 0 12px}
+.ig-top{display:grid;grid-template-columns:41% 1fr;gap:12px;align-items:stretch;margin-bottom:6px}
+.av.ig-ph{width:auto;height:auto;min-height:200px;border-radius:14px;font-size:46px;box-shadow:none;border:2px solid rgba(255,255,255,.25)}
+.av.ig-ph img{object-position:center top}
+.ig-li{display:flex;flex-direction:column;justify-content:center;gap:9px;font-size:14px}
+.ig-li div::before{content:"";display:inline-block;width:8px;height:8px;background:#fff;margin-right:8px;vertical-align:middle}
+.ig-li b{font-weight:800}
+.ig-h{display:inline-block;background:#000;color:#fff;font-weight:800;font-size:15px;padding:5px 16px 5px 11px;border-radius:0 9px 9px 0;border-left:5px solid #f2c200;margin:14px 0 8px}
+.ig-tr{font-size:21px;letter-spacing:1px;line-height:1.35;margin-bottom:4px}
+.ig-tr small{font-size:13px;font-weight:700;color:#fff;letter-spacing:0}
+.ig-p{font-size:14px;margin:2px 0}
+.ig-p::before{content:"";display:inline-block;width:8px;height:8px;background:#fff;margin-right:8px;vertical-align:middle}
+.ig-rb{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+.ig-rb>div{font-size:13px}
+.ig-rb>div.f{grid-column:1/-1}
+.ig-b{height:22px;margin-top:3px;display:flex}
+.ig-b i{font-style:normal;font-weight:800;font-size:14px;color:#15151e;background:linear-gradient(180deg,#ffd84d,#f2a900);padding:0 8px;display:flex;align-items:center;min-width:30px;border-radius:2px}
 </style>
 </head>
 <body>
@@ -279,7 +299,11 @@ function hist(name){
     else cls="n";
     chips.push(`<span class="ch ${cls}" title="GP ${g}"><i>${g.slice(0,3).toUpperCase()}</i>${v}</span>`)});
   const st=[[di+1+"e","Classement"],[pts,"Points"],[w,"Victoires"],[pod,"Podiums"],[t5,"Top 5"],[dnf,"Abandons / NC"],[ent,"Courses"],[best?best+"e":"–","Meilleur résultat"],[fin?(sum/fin).toFixed(1):"–","Position moy."]];
-  return `<div class="pn" style="--tc:${col}">${wm(name,team)}${wi(team)}<div class="dhead"><div class="av" data-n="${name}" style="background:${col}">${avHTML(name)}</div><div><div class="dn">${name}${tg(team)}</div><div class="ds">${team}${carOf(name,team)?" · "+carOf(name,team):""} · Saison 2026</div></div></div>${stHTML(st,[2,3,1])}<div class="chs">${chips.join("")}</div><div class="lg">Résultat de chaque Grand Prix (ordre de la saison). Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent.</div><div class="lg">Photos : Wikipédia (si disponible).</div></div>`;
+  const ord=n=>n===1?"1er":n+"e";
+  const sc=v=>Math.max(9,Math.round(v/Math.max(1,ent)*100));
+  const tro=w?"🏆".repeat(Math.min(w,10))+(w>10?` <small>+${w-10}</small>`:""):"";
+  const rb=(l,v,cl)=>`<div${cl?` class="${cl}"`:""}>${l}<div class="ig-b"><i style="width:${sc(v)}%">${v}</i></div></div>`;
+  return `<div class="pn" style="--tc:${col}">${wm(name,team)}${wi(team)}<div class="ig-title">${name}${tg(team)}</div><div class="ig-sub">${team}${carOf(name,team)?" · "+carOf(name,team):""} · Saison 2026</div><div class="ig-top"><div class="av ig-ph" data-n="${name}" style="background:${col}">${avHTML(name)}</div><div class="ig-li"><div>Classement : <b>${ord(di+1)}</b></div><div>Points : <b>${pts}</b></div><div>Courses disputées : <b>${ent}</b></div><div>Meilleur résultat : <b>${best?ord(best):"–"}</b></div><div>Position moyenne : <b>${fin?(sum/fin).toFixed(1):"–"}</b></div></div></div><div class="ig-h">Palmarès ${DATA.round?"2026":""}</div>${tro?`<div class="ig-tr">${tro}</div>`:""}<div class="ig-p"><b>${w}</b> victoire${w>1?"s":""} · <b>${pod}</b> podium${pod>1?"s":""}</div><div class="ig-h">Records de la saison</div><div class="ig-rb">${rb("Victoires",w)}${rb("Podiums",pod)}${rb("Top 5",t5)}${rb("Abandons / NC",dnf)}</div><div class="ig-h">Course par course</div><div class="chs">${chips.join("")}</div><div class="lg">Or : victoire · gris : podium · ✕ : abandon ou non classé · – : absent. Barres : sur ${ent} course${ent>1?"s":""}.</div><div class="lg">Photos : Wikipédia (si disponible).</div></div>`;
 }
 async function photo(name){
   if(name in PH)return;PH[name]=null;
